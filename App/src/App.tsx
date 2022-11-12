@@ -17,6 +17,9 @@ import {
   Text,
   useColorScheme,
   View,
+  TextInput,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 
 import {
@@ -27,6 +30,9 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { AnimatedFAB, FAB } from 'react-native-paper';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -70,19 +76,29 @@ const App = () => {
 
 const HomeScreen = () => {
   const isDarkMode = useColorScheme() === 'dark';
+  const [isExtended, setIsExtended] = React.useState(true);
 
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollPosition =
+      Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
+    console.log("Ich ändere meinen Wert", currentScrollPosition);
+    setIsExtended(currentScrollPosition <= 0);
+  };
+  console.log(isExtended);
+  console.log("Ich habe mich neugeladen");
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <Text>Hello World</Text>
+      <TextInput> Dies ist ein Überfall </TextInput>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
+        onScroll={onScroll}
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
@@ -106,6 +122,7 @@ const HomeScreen = () => {
           <LearnMoreLinks />
         </View>
       </ScrollView>
+      <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon={"plus"} onPress={() => console.log('Pressed')} />
     </SafeAreaView>
   );
 };
@@ -123,6 +140,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
+  },
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 64,
   },
   highlight: {
     fontWeight: '700',
