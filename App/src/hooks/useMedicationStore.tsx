@@ -1,19 +1,21 @@
 import React, { createContext, ReactNode, useCallback, useContext, useRef, useSyncExternalStore } from "react";
 import { Medication } from "../interfaces";
 
-type Store = { medication: Medication[] };
+export type Store = { medication: Medication[] };
 
-type Subscribe = () => void;
+export type Subscribe = () => void;
 
-type Unsubscribe = () => void;
+export type Unsubscribe = () => void;
 
-type Subscriber = (callback: Subscribe) => Unsubscribe;
+export type Subscriber = (callback: Subscribe) => Unsubscribe;
 
-type UseStoreDataReturnValue = {
+export type UseStoreDataReturnValue = {
     getter: () => Store,
     setter: (value: Partial<Store>) => void
     subscribe: Subscriber
 }
+
+export type UseStoreReturnValue<SelectorOutput = Store> = [selector: SelectorOutput, setter: (value: Partial<SelectorOutput>) => void];
 
 function useStoreData(): UseStoreDataReturnValue {
     const store = useRef<Store>({ medication: [] });
@@ -40,7 +42,7 @@ function useStoreData(): UseStoreDataReturnValue {
 
 const StoreContext = createContext<UseStoreDataReturnValue | undefined>(undefined);
 
-export function Provider({ children }: { children: ReactNode }): JSX.Element {
+export function MedicationProvider({ children }: { children: ReactNode }): JSX.Element {
     return (
         <StoreContext.Provider value={useStoreData()}>
             {children}
@@ -48,9 +50,7 @@ export function Provider({ children }: { children: ReactNode }): JSX.Element {
     );
 }
 
-type UseStoreReturnValue<SelectorOutput> = [selector: SelectorOutput, setter: (value: Partial<Store>) => void]
-
-export function useStore<SelectorOutput = Store>(selector?: (store: Store) => SelectorOutput): UseStoreReturnValue<SelectorOutput | Store> {
+export function useMedicationStore<SelectorOutput = Store>(selector?: (store: Store) => SelectorOutput): UseStoreReturnValue<SelectorOutput | Store> {
     const store = useContext(StoreContext);
     if (!store) {
         throw new Error("Store not found");

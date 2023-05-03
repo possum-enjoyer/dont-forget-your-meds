@@ -1,13 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import React, { type PropsWithChildren } from 'react';
 import {
   SafeAreaView,
@@ -29,26 +19,32 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackNavigationProp,NativeStackScreenProps  } from '@react-navigation/native-stack';
+import { useNavigation } from "@react-navigation/native";
 
-import { AnimatedFAB, FAB } from 'react-native-paper';
+import { AnimatedFAB, Card } from 'react-native-paper';
 
+type RootStackParamList = {
+  Home: undefined,
+  Test: undefined,
+  Input: { foo?: number }
+}
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const Section: React.FC<
   PropsWithChildren<{
     title: string;
   }>
 > = ({ children, title }) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const color = useColorScheme() === 'dark' ? Colors.black : Colors.white;
   return (
     <View style={styles.sectionContainer}>
       <Text
         style={[
           styles.sectionTitle,
           {
-            color: isDarkMode ? Colors.white : Colors.black,
+            color,
           },
         ]}>
         {title}
@@ -57,7 +53,7 @@ const Section: React.FC<
         style={[
           styles.sectionDescription,
           {
-            color: isDarkMode ? Colors.light : Colors.dark,
+            color,
           },
         ]}>
         {children}
@@ -66,26 +62,59 @@ const Section: React.FC<
   );
 };
 
+const TestNavElement = () => {
+  return <>
+    <SafeAreaView>
+      <Section title="Test">
+        <Text style={testStyles.testText}>
+          Hier ist ein Test Text
+        </Text>
+      </Section>
+      <Section title="Meds">
+        <Card>
+          <Text>
+            Test
+          </Text>
+        </Card>
+      </Section>
+    </SafeAreaView>
+  </>;
+};
+
+const testStyles = StyleSheet.create({
+  testText: {
+    fontSize: 36,
+  },
+});
+
 const App = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Test" component={TestNavElement} options={{ headerShown: true, animation: 'default' }} />
+      <Stack.Screen name="Input" component={Input} options={{ headerShown: true, animation: 'default' }} />
     </Stack.Navigator>
   );
+};
+
+
+const Input = (props: NativeStackScreenProps<RootStackParamList, "Input"> ) => {
+  console.log(props)
+  return <SafeAreaView>
+    <Text>The ID is: {props.route.params.foo}</Text>
+  </SafeAreaView>;
 };
 
 const HomeScreen = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [isExtended, setIsExtended] = React.useState(true);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Home">>();
 
   const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollPosition =
-      Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
-    console.log("Ich ändere meinen Wert", currentScrollPosition);
+    const currentScrollPosition = Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
     setIsExtended(currentScrollPosition <= 0);
   };
-  console.log(isExtended);
-  console.log("Ich habe mich neugeladen");
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -122,7 +151,9 @@ const HomeScreen = () => {
           <LearnMoreLinks />
         </View>
       </ScrollView>
-      <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon={"plus"} onPress={() => console.log('Pressed')} />
+      <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon={"plus"} onPress={() => {
+        navigation.navigate("Input", { foo: 10 });
+      }} />
     </SafeAreaView>
   );
 };
