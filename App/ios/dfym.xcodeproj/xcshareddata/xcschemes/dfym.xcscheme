@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "tyfm.app"
-               BlueprintName = "tyfm"
-               ReferencedContainer = "container:tyfm.xcodeproj">
+               BuildableName = "dfym.app"
+               BlueprintName = "dfym"
+               ReferencedContainer = "container:dfym.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "tyfmTests.xctest"
-               BlueprintName = "tyfmTests"
-               ReferencedContainer = "container:tyfm.xcodeproj">
+               BuildableName = "dfymTests.xctest"
+               BlueprintName = "dfymTests"
+               ReferencedContainer = "container:dfym.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "tyfm.app"
-            BlueprintName = "tyfm"
-            ReferencedContainer = "container:tyfm.xcodeproj">
+            BuildableName = "dfym.app"
+            BlueprintName = "dfym"
+            ReferencedContainer = "container:dfym.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "tyfm.app"
-            BlueprintName = "tyfm"
-            ReferencedContainer = "container:tyfm.xcodeproj">
+            BuildableName = "dfym.app"
+            BlueprintName = "dfym"
+            ReferencedContainer = "container:dfym.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
