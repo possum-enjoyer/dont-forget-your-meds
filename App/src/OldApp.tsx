@@ -20,21 +20,18 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { createNativeStackNavigator, NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { DarkTheme, DefaultTheme, NavigationContainer, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import notifee from '@notifee/react-native';
 
 
 import { AnimatedFAB, Button, Card } from 'react-native-paper';
 import { MedicationDetailsView } from './screens/MedicationDetailsView';
-import { useStorageHolder } from './StorageHandler';
-import { Settings } from './screens/Settings';
 
-export type RootStackParamList = {
+type RootStackParamList = {
   Home: undefined,
   Test: undefined,
   Input: { foo?: number },
-  Medication: undefined,
-  Settings: undefined
+  Medication: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -95,27 +92,20 @@ const testStyles = StyleSheet.create({
 });
 
 const App = () => {
-  const [{darkMode}] = useStorageHolder();
   return (
-    <NavigationContainer theme={darkMode ? DarkTheme : DefaultTheme}>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Test" component={TestNavElement} options={{ headerShown: true, animation: 'default' }} />
-        <Stack.Screen name="Input" component={Input} options={{ headerShown: true, animation: 'default' }} />
-        <Stack.Screen name="Medication" component={MedicationDetailsView} />
-        <Stack.Screen name="Settings" component={Settings} />
-      </Stack.Navigator>
-    </NavigationContainer>
-
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Test" component={TestNavElement} options={{ headerShown: true, animation: 'default' }} />
+      <Stack.Screen name="Input" component={Input} options={{ headerShown: true, animation: 'default' }} />
+      <Stack.Screen name="Medication" component={MedicationDetailsView} />
+    </Stack.Navigator>
   );
 };
 
 
 const Input = (props: NativeStackScreenProps<RootStackParamList, "Input">) => {
-
   return <SafeAreaView>
     <Text>The ID is: {props.route.params.foo}</Text>
-    <Button onPress={() => props.navigation.navigate("Settings")}> Click here for settings </Button>
   </SafeAreaView>;
 };
 
@@ -166,7 +156,7 @@ const HomeScreen = () => {
         </View>
       </ScrollView>
       <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon="plus" onPress={() => {
-        navigation.navigate("Input", { foo: 10 });
+        navigation.navigate("Medication");
       }} />
     </SafeAreaView>
   );

@@ -11,9 +11,7 @@ import { name as appName } from './app.json';
 export default function Main() {
     return (
         <PaperProvider>
-            <NavigationContainer>
-                <App />
-            </NavigationContainer>
+            <App />
         </PaperProvider>
     );
 }
