@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
-  extends: '@react-native-community',
-    overrides: [
+  extends: '@react-native',
+  overrides: [
     {
       files: ["*.js", "*.jsx", "*.ts", "*.tsx"],
       rules: {

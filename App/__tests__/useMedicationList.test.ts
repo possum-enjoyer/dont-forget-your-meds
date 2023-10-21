@@ -1,5 +1,5 @@
 import 'react-native';
-import { useMedicationList } from "../src/hooks";
+import {useMedicationList} from '../src/hooks';
 import { renderHook, act, type RenderHookResult, cleanup } from '@testing-library/react-native';
 
 describe('useMedicationList hook tests', () => {
