@@ -14,7 +14,7 @@ export type UseStoreDataReturnValue<Store> = {
     subscribe: Subscriber
 }
 
-export type UseStoreReturnValue<Store, SelectorOutput = Store> = [selector: SelectorOutput, setter: (value: Partial<Store>) => void];
+export type UseStoreReturnValue<Store, SelectorOutput = Store> = [selector: SelectorOutput, setter: UseStoreDataReturnValue<Store>['setter']];
 
 /**
  * ⚠️ EXPERIMENTAL AND UNTESTED ⚠️
@@ -60,13 +60,13 @@ export const buildSyncedStore = <Store,>(initialStoreState: Store) => {
         );
     }
 
-    function useStore<SelectorOutput = Store>(selector?: (store: Store) => SelectorOutput): UseStoreReturnValue<Store, SelectorOutput | Store> {
+    function useStore<SelectorOutput = Store>(selector?: (store: Store) => SelectorOutput): UseStoreReturnValue<Store, SelectorOutput> {
         const store = useContext(StoreContext);
         if (!store) {
-            throw new Error("Store not found");
+            throw new Error("Store not found. Maybe the Store was not inside it's corresponding Provider");
         }
 
-        const selectFunction = selector ? selector : (currentStore: Store) => currentStore;
+        const selectFunction = selector ? selector : (currentStore: Store) => currentStore as unknown as SelectorOutput;
 
         const state = useSyncExternalStore(
             store.subscribe,
