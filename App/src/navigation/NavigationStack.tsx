@@ -1,16 +1,17 @@
-import { StackScreenProps, createStackNavigator } from "@react-navigation/stack";
+import { NativeStackScreenProps, createNativeStackNavigator } from "@react-navigation/native-stack";
+import { MedicationFormProps } from "../screens";
 
 export type RootStackParamList = {
   Home: undefined,
-  MedicationForm: undefined,
+  MedicationForm: MedicationFormProps | undefined,
 }
 
 export type RootStackScreenProps<K extends keyof RootStackParamList> =
-  StackScreenProps<RootStackParamList, K>;
+  NativeStackScreenProps<RootStackParamList, K>;
 
 export type RootStackRouteProp<K extends keyof RootStackParamList> = RootStackScreenProps<K>["route"]
 
-export const Stack = createStackNavigator<RootStackParamList>();
+export const Stack = createNativeStackNavigator<RootStackParamList>();
 
 declare global {
   namespace ReactNavigation {

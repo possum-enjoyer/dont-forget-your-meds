@@ -6,17 +6,21 @@
  */
 
 import React from 'react';
+import "react-native";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Material3ThemeProvider } from './providers';
+import { Material3ThemeProvider, MedicationStoreProvider } from './providers';
 import { NavContainer, Navigator } from './navigation';
+
 
 const App = () => {
   return (
     <>
       <SafeAreaProvider >
-        <Material3ThemeProvider >
+        <Material3ThemeProvider>
           <NavContainer >
-            <Navigator />
+            <MedicationStoreProvider>
+              <Navigator />
+            </MedicationStoreProvider>
           </NavContainer>
         </Material3ThemeProvider>
       </SafeAreaProvider>

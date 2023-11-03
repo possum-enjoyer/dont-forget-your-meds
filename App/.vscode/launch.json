@@ -1,0 +1,10 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {"name":"Run Android","request":"launch","type":"reactnative","cwd":"${workspaceFolder}","enableDebug":true,"platform":"android"},
+        {"name":"Run Android Hermes","request":"launch","type":"reactnativedirect","cwd":"${workspaceFolder}","enableDebug":true,"platform":"android"},
+        {"name":"Attach to packager","request":"attach","type":"reactnative","cwd":"${workspaceFolder}"},
+        {"name":"Attach to Hermes application - Experimental","request":"attach", "type":"reactnativedirect","cwd":"${workspaceFolder}", "sourceMaps": true}
+    ]
+}

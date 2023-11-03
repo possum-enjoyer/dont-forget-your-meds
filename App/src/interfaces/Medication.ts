@@ -1,5 +1,6 @@
 export interface Medication {
-    id: number,
+    id: string,
     title: string,
-    amount: number
+    dosage: number,
+    timeSlot: { hours: number, minutes: number }
 }

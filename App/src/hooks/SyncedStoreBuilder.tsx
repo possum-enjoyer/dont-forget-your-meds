@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useRef, useSyncExternalStore } from "react";
+import { produce, Draft } from "immer";
 
 export type Subscribe = () => void;
 
@@ -6,7 +7,7 @@ export type Unsubscribe = () => void;
 
 export type Subscriber = (callback: Subscribe) => Unsubscribe;
 
-export type SetterValue<Store> = Partial<Store> | ((store: Store) => Store)
+export type SetterValue<Store> = Partial<Store> | ((store: Draft<Store>) => Draft<Store>)
 
 export type UseStoreDataReturnValue<Store> = {
     getter: () => Store,
@@ -33,11 +34,12 @@ export const buildSyncedStore = <Store,>(initialStoreState: Store) => {
 
         const setter: UseStoreDataReturnValue<Store>["setter"] = useCallback((value: SetterValue<Store>) => {
             if (typeof value === "function") {
-                store.current = value(store.current);
+                store.current = produce(store.current, value);
             }
             else {
-                store.current = { ...store.current, ...value };
+                store.current = produce(store.current, draft => ({ ...draft, ...value }));
             }
+            subscribers.current.forEach((callback) => callback());
         }, []);
 
         const subscribe: UseStoreDataReturnValue<Store>["subscribe"] = useCallback((callback) => {
