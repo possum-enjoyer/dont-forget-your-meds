@@ -1,40 +1,35 @@
-import React from "react";
-import { MMKVLoader, useMMKVStorage } from "react-native-mmkv-storage";
-import { Medication } from "./interfaces";
+import React, { useEffect } from "react";
+import { MMKV, useMMKVObject } from 'react-native-mmkv';
+import { ColorSchemeName, Appearance } from "react-native";
 
+export const storage = new MMKV();
 interface SettingsStorage {
-    darkMode: boolean
+    color?: ColorSchemeName,
+    isSystem?: boolean
 }
 
-interface MedicationStorage {
-    medications: Medication[]
+type useSettingsReturnValue = [SettingsStorage | undefined, ((newSettings: Partial<SettingsStorage>) => void)];
+
+if (!storage.getString('settings')) {
+    console.log('empty')
+    const defaultSettings: SettingsStorage = {
+        color: Appearance.getColorScheme(),
+        isSystem: true,
+    };
+    storage.set('settings', JSON.stringify(defaultSettings))
 }
 
-type useStorageHolderReturnValue = [SettingsStorage, ((newSettings: Partial<SettingsStorage>) => void)];
-type useMedStorageHolderReturnValue = [MedicationStorage, ((newSettings: Partial<MedicationStorage>) => void)];
-
-const MMKV = new MMKVLoader().withEncryption().initialize();
-
-export const useStorageHolder = (): useStorageHolderReturnValue => {
-
-    const [settings, setSettings] = useMMKVStorage<SettingsStorage>('settings', MMKV, { darkMode: true });
+export const useSettings = (): useSettingsReturnValue => {
+    const [settings, setSettings] = useMMKVObject<SettingsStorage>('settings', storage);
 
     const updateSettings = React.useCallback((newSettings: Partial<SettingsStorage>) => {
-        console.log('updateSettings Triggered');
-        setSettings(oldSettings => ({ ...oldSettings, ...newSettings }));
-    }, [setSettings]);
+        if (settings) {
+            setSettings({ ...settings, ...newSettings });
+        }
+        else {
+            setSettings(newSettings);
+        }
+    }, [setSettings, settings]);
 
     return [settings, updateSettings];
-};
-
-export const useMedStorageHolder = (): useMedStorageHolderReturnValue => {
-
-    const [medications, setMedications] = useMMKVStorage<MedicationStorage>('medications', MMKV, {medications: []});
-
-    const updateMedications = React.useCallback((newMedications: Partial<MedicationStorage>) => {
-        console.log('updateSettings Triggered');
-        setMedications(oldMedications => ({ ...oldMedications, ...newMedications }));
-    }, [setMedications]);
-
-    return [medications, updateMedications];
 };

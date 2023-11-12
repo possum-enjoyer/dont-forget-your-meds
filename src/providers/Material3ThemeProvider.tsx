@@ -2,6 +2,7 @@ import React, { createContext, useContext } from 'react';
 import { useColorScheme } from 'react-native';
 import { useMaterial3Theme as usePCHMMaterial3Theme, type Material3Theme, Material3Scheme } from '@pchmn/expo-material3-theme';
 import { MD3DarkTheme, MD3LightTheme, MD3Theme, PaperProvider, ProviderProps, useTheme } from 'react-native-paper';
+import { useSystemColorScheme } from '../hooks';
 
 type Material3ThemeContextProps = {
     theme: Material3Theme;
@@ -21,14 +22,14 @@ export function Material3ThemeProvider({
     fallbackSourceColor,
     ...otherProps
 }: Material3ThemeProviderProps) {
-    const colorScheme = useColorScheme();
+    const [{ color }] = useSystemColorScheme();
 
     const { theme, updateTheme, resetTheme } = usePCHMMaterial3Theme({
         sourceColor,
         fallbackSourceColor,
     });
 
-    const paperTheme = React.useMemo(() => colorScheme === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light }, [colorScheme, theme.dark, theme.light]);
+    const paperTheme = React.useMemo(() => color === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light }, [color, theme.dark, theme.light]);
 
     return (
         <Material3ThemeProviderContext.Provider value={{ theme, updateTheme, resetTheme }}>
@@ -39,7 +40,7 @@ export function Material3ThemeProvider({
     );
 }
 
-export function useMaterial3Theme() {
+export function useMaterial3ThemeContext() {
     const ctx = useContext(Material3ThemeProviderContext);
     if (!ctx) {
         throw new Error('useMaterial3Theme must be used inside Material3ThemeProvider');

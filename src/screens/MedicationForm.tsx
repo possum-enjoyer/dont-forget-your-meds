@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { StyleSheet, View, KeyboardAvoidingView, ScrollView } from 'react-native';
-import { useForm, Controller, FormProvider, ControllerProps, FieldPath, FieldValues } from "react-hook-form";
+import { useForm, Controller, FormProvider, ControllerProps, FieldPath, FieldValues, FieldPathByValue, ControllerRenderProps } from "react-hook-form";
 import { TimePickerModal } from 'react-native-paper-dates';
 import { RootStackScreenProps } from '../navigation';
 import { useMD3Theme, useMedStore } from '../providers';
@@ -16,7 +16,10 @@ export type MedicationFormProps = {
 export type FormData = Omit<Medication, 'id'>
 
 
-const ControlledTimePicker = (props: Parameters<ControllerProps<FormData, "timeSlot">["render"]>[0]): React.ReactElement => {
+type ControlledTimePickerProps<TFieldValues extends FieldValues, TPath extends FieldPathByValue<TFieldValues, Medication['timeSlot']>> = Parameters<ControllerProps<TFieldValues, TPath>["render"]>[0]
+
+
+const ControlledTimePicker = <TFieldValues extends FieldValues, TPath extends FieldPathByValue<TFieldValues, Medication['timeSlot']>>(props: ControlledTimePickerProps<TFieldValues, TPath>): React.ReactElement => {
     const [visible, setVisible] = React.useState(false);
     const onDismiss = React.useCallback(() => {
         setVisible(false);
@@ -27,11 +30,11 @@ const ControlledTimePicker = (props: Parameters<ControllerProps<FormData, "timeS
             setVisible(false);
             props.field.onChange(confirmValues);
         },
-        [props.field]
+        [props]
     );
 
     return <View>
-        <Button style={[styles.controller]} onPress={() => setVisible(true)}>Pick Time</Button>
+        <Button ref={props.field.ref} style={[styles.controller]} onPress={() => setVisible(true)}>Time to take</Button>
         <TimePickerModal
             locale="de"
             visible={visible}
@@ -62,7 +65,7 @@ export const MedicationForm = ({ route: { params }, navigation }: RootStackScree
             }));
         }
 
-        navigation.replace('Home');
+        navigation.navigate('Home');
     };
 
     const onError = (errors: any) => {
@@ -77,19 +80,19 @@ export const MedicationForm = ({ route: { params }, navigation }: RootStackScree
                 <FormProvider {...form}>
                     <ScrollView contentContainerStyle={{}}>
                         <Controller control={form.control} name="title" rules={{ required: true }}
-                            render={({ field: { onChange, onBlur, value } }) => {
+                            render={({ field: { onChange, onBlur, value, ref } }) => {
                                 return (
                                     <View style={[styles.controller]}>
-                                        <TextInput label={"Enter Medication Name"} theme={theme} mode="outlined" placeholder="Enter Medication Name" onBlur={onBlur} onChangeText={onChange} value={value} />
+                                        <TextInput ref={ref} onSubmitEditing={() => form.setFocus('dosage')} returnKeyType="next" label={"Enter Medication Name"} theme={theme} mode="outlined" placeholder="Enter Medication Name" onBlur={onBlur} onChangeText={onChange} value={value} />
                                     </View >
                                 );
                             }}
                         />
                         <Controller control={form.control} name="dosage" rules={{ required: true }}
-                            render={({ field: { onChange, onBlur, value } }) => {
+                            render={({ field: { onChange, onBlur, value, ref } }) => {
                                 return (
                                     <View style={[styles.controller]}>
-                                        <TextInput label={"Dosage"} theme={theme} keyboardType="numeric" mode="outlined" placeholder="Dosage" onBlur={onBlur} onChangeText={onChange} value={value?.toString()} />
+                                        <TextInput ref={ref} onSubmitEditing={() => form.setFocus('timeSlot')} returnKeyType="next" label={"Dosage"} theme={theme} keyboardType="numeric" mode="outlined" placeholder="Dosage" onBlur={onBlur} onChangeText={onChange} value={value?.toString()} />
                                     </View >
                                 );
                             }}

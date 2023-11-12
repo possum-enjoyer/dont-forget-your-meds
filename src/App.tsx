@@ -7,23 +7,22 @@
 
 import React from 'react';
 import "react-native";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Material3ThemeProvider, MedicationStoreProvider } from './providers';
+import { Material3ThemeProvider, MedicationStoreProvider, SafeAreaProviderWithDefaultBackground } from './providers';
 import { NavContainer, Navigator } from './navigation';
 
 
 const App = () => {
   return (
     <>
-      <SafeAreaProvider >
-        <Material3ThemeProvider>
-          <NavContainer >
-            <MedicationStoreProvider>
+      <Material3ThemeProvider>
+        <MedicationStoreProvider>
+          <NavContainer>
+            <SafeAreaProviderWithDefaultBackground>
               <Navigator />
-            </MedicationStoreProvider>
+            </SafeAreaProviderWithDefaultBackground>
           </NavContainer>
-        </Material3ThemeProvider>
-      </SafeAreaProvider>
+        </MedicationStoreProvider>
+      </Material3ThemeProvider>
     </>
   );
 };

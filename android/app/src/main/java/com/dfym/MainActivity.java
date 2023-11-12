@@ -1,6 +1,6 @@
 package com.dfym;
-import expo.modules.ReactActivityDelegateWrapper;
 import android.os.Bundle;
+import expo.modules.ReactActivityDelegateWrapper;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
