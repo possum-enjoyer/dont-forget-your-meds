@@ -1,0 +1,663 @@
+diff --git a/node_modules/react-native-paper-dates/lib/typescript/Date/Calendar.d.ts b/node_modules/react-native-paper-dates/lib/typescript/Date/Calendar.d.ts
+index b20ee64..9f788f9 100644
+--- a/node_modules/react-native-paper-dates/lib/typescript/Date/Calendar.d.ts
++++ b/node_modules/react-native-paper-dates/lib/typescript/Date/Calendar.d.ts
+@@ -18,6 +18,7 @@ export type BaseCalendarProps = {
+     startDate?: CalendarDate;
+     endDate?: CalendarDate;
+     dateMode?: 'start' | 'end';
++    startMonday?: boolean
+ };
+ export type CalendarDate = Date | undefined;
+ export type CalendarDates = Date[] | undefined | null;
+diff --git a/node_modules/react-native-paper-dates/lib/typescript/Date/DatePickerModal.d.ts b/node_modules/react-native-paper-dates/lib/typescript/Date/DatePickerModal.d.ts
+index f3cd799..bb9ac74 100644
+--- a/node_modules/react-native-paper-dates/lib/typescript/Date/DatePickerModal.d.ts
++++ b/node_modules/react-native-paper-dates/lib/typescript/Date/DatePickerModal.d.ts
+@@ -7,6 +7,7 @@ interface DatePickerModalProps {
+     disableStatusBarPadding?: boolean;
+     inputEnabled?: boolean;
+     presentationStyle?: 'fullScreen' | 'pageSheet' | 'formSheet' | 'overFullScreen';
++    startMonday?: boolean;
+ }
+ export interface DatePickerModalSingleProps extends DatePickerModalContentSingleProps, DatePickerModalProps {
+ }
+diff --git a/node_modules/react-native-paper-dates/lib/typescript/Date/Month.d.ts b/node_modules/react-native-paper-dates/lib/typescript/Date/Month.d.ts
+index b6e1b98..e73c5a5 100644
+--- a/node_modules/react-native-paper-dates/lib/typescript/Date/Month.d.ts
++++ b/node_modules/react-native-paper-dates/lib/typescript/Date/Month.d.ts
+@@ -18,6 +18,7 @@ interface BaseMonthProps {
+     endDate?: CalendarDate;
+     date?: CalendarDate;
+     dates?: CalendarDates;
++    startMonday?: boolean
+ }
+ interface MonthRangeProps extends BaseMonthProps {
+     mode: 'range';
+diff --git a/node_modules/react-native-paper-dates/src/Date/Calendar.tsx b/node_modules/react-native-paper-dates/src/Date/Calendar.tsx
+index 76dbc53..7070c78 100644
+--- a/node_modules/react-native-paper-dates/src/Date/Calendar.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/Calendar.tsx
+@@ -40,6 +40,7 @@ export type BaseCalendarProps = {
+   startDate?: CalendarDate
+   endDate?: CalendarDate
+   dateMode?: 'start' | 'end'
++  startMonday?: boolean
+ }
+ 
+ export type CalendarDate = Date | undefined
+@@ -63,7 +64,7 @@ export type MultiConfirm = (params: { dates: Date[] }) => void
+ export interface CalendarSingleProps extends BaseCalendarProps {
+   mode: 'single'
+   date: CalendarDate
+-  onChange: SingleChange
++  onChange: SingleChange,
+ }
+ 
+ export interface CalendarRangeProps extends BaseCalendarProps {
+@@ -136,7 +137,7 @@ function Calendar(
+   const onPressDate = useCallback(
+     (d: Date) => {
+       if (mode === 'single') {
+-        ;(onChangeRef.current as SingleChange)({
++        ; (onChangeRef.current as SingleChange)({
+           date: dateMode === 'start' ? d : getEndOfDay(d),
+         })
+       } else if (mode === 'range') {
+@@ -146,7 +147,7 @@ function Calendar(
+         if (sd && !ed && dateToUnix(d) >= dateToUnix(sd!)) {
+           isStart = false
+         }
+-        ;(onChangeRef.current as RangeChange)({
++        ; (onChangeRef.current as RangeChange)({
+           startDate: isStart ? d : sd,
+           endDate: !isStart ? getEndOfDay(d) : undefined,
+         })
+@@ -159,11 +160,11 @@ function Calendar(
+           : [...datesRef.current, d]
+ 
+         newDates.sort((a, b) => a.getTime() - b.getTime())
+-        ;(onChangeRef.current as MultiChange)({
+-          dates: newDates,
+-          datePressed: d,
+-          change: exists ? 'removed' : 'added',
+-        })
++          ; (onChangeRef.current as MultiChange)({
++            dates: newDates,
++            datePressed: d,
++            change: exists ? 'removed' : 'added',
++          })
+       }
+     },
+     [mode, dateMode, onChangeRef, startDateRef, endDateRef, datesRef]
+@@ -177,6 +178,7 @@ function Calendar(
+         initialIndex={getInitialIndex(firstDate)}
+         selectedYear={selectedYear}
+         scrollMode={scrollMode}
++        startMonday={props.startMonday}
+         renderItem={({ index }) => (
+           <Month
+             locale={locale}
+@@ -196,6 +198,7 @@ function Calendar(
+             selectColor={selectColor}
+             roundness={theme.roundness}
+             disableWeekDays={disableWeekDays}
++            startMonday={props.startMonday}
+           />
+         )}
+         renderHeader={({ onPrev, onNext }) => (
+@@ -205,6 +208,7 @@ function Calendar(
+             onNext={onNext}
+             scrollMode={scrollMode}
+             disableWeekDays={disableWeekDays}
++            startMonday={props.startMonday}
+           />
+         )}
+       />
+diff --git a/node_modules/react-native-paper-dates/src/Date/CalendarHeader.tsx b/node_modules/react-native-paper-dates/src/Date/CalendarHeader.tsx
+index d95206b..031a590 100644
+--- a/node_modules/react-native-paper-dates/src/Date/CalendarHeader.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/CalendarHeader.tsx
+@@ -27,12 +27,14 @@ function CalendarHeader({
+   onNext,
+   disableWeekDays,
+   locale,
++  startMonday
+ }: {
+   locale: undefined | string
+   scrollMode: 'horizontal' | 'vertical'
+   onPrev: () => any
+   onNext: () => any
+-  disableWeekDays?: DisableWeekDaysType
++  disableWeekDays?: DisableWeekDaysType,
++  startMonday?: boolean
+ }) {
+   const theme = useTheme()
+   const isHorizontal = scrollMode === 'horizontal'
+@@ -67,7 +69,7 @@ function CalendarHeader({
+           </View>
+         </View>
+       ) : null}
+-      <DayNames disableWeekDays={disableWeekDays} locale={locale} />
++      <DayNames disableWeekDays={disableWeekDays} locale={locale} startMonday={startMonday} />
+     </View>
+   )
+ }
+diff --git a/node_modules/react-native-paper-dates/src/Date/DatePickerModal.tsx b/node_modules/react-native-paper-dates/src/Date/DatePickerModal.tsx
+index 4304b03..a627c0a 100644
+--- a/node_modules/react-native-paper-dates/src/Date/DatePickerModal.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/DatePickerModal.tsx
+@@ -24,23 +24,24 @@ interface DatePickerModalProps {
+   disableStatusBarPadding?: boolean
+   inputEnabled?: boolean
+   presentationStyle?:
+-    | 'fullScreen'
+-    | 'pageSheet'
+-    | 'formSheet'
+-    | 'overFullScreen'
++  | 'fullScreen'
++  | 'pageSheet'
++  | 'formSheet'
++  | 'overFullScreen',
++  startMonday?: boolean,
+ }
+ 
+ export interface DatePickerModalSingleProps
+   extends DatePickerModalContentSingleProps,
+-    DatePickerModalProps {}
++  DatePickerModalProps { }
+ 
+ export interface DatePickerModalMultiProps
+   extends DatePickerModalContentMultiProps,
+-    DatePickerModalProps {}
++  DatePickerModalProps { }
+ 
+ export interface DatePickerModalRangeProps
+   extends DatePickerModalContentRangeProps,
+-    DatePickerModalProps {}
++  DatePickerModalProps { }
+ 
+ export function DatePickerModal(
+   props:
+diff --git a/node_modules/react-native-paper-dates/src/Date/DatePickerModalContent.tsx b/node_modules/react-native-paper-dates/src/Date/DatePickerModalContent.tsx
+index b422b41..191867b 100644
+--- a/node_modules/react-native-paper-dates/src/Date/DatePickerModalContent.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/DatePickerModalContent.tsx
+@@ -33,13 +33,14 @@ interface DatePickerModalContentBaseProps {
+   disableSafeTop?: boolean
+   saveLabelDisabled?: boolean
+   uppercase?: boolean
+-  inputEnabled?: boolean
++  inputEnabled?: boolean,
++  startMonday?: boolean,
+ }
+ 
+ export interface DatePickerModalContentRangeProps
+   extends HeaderPickProps,
+-    BaseCalendarProps,
+-    DatePickerModalContentBaseProps {
++  BaseCalendarProps,
++  DatePickerModalContentBaseProps {
+   mode: 'range'
+   startDate: CalendarDate
+   endDate: CalendarDate
+@@ -49,8 +50,8 @@ export interface DatePickerModalContentRangeProps
+ 
+ export interface DatePickerModalContentSingleProps
+   extends HeaderPickProps,
+-    BaseCalendarProps,
+-    DatePickerModalContentBaseProps {
++  BaseCalendarProps,
++  DatePickerModalContentBaseProps {
+   mode: 'single'
+   date?: CalendarDate
+   onChange?: SingleChange
+@@ -60,8 +61,8 @@ export interface DatePickerModalContentSingleProps
+ 
+ export interface DatePickerModalContentMultiProps
+   extends HeaderPickProps,
+-    BaseCalendarProps,
+-    DatePickerModalContentBaseProps {
++  BaseCalendarProps,
++  DatePickerModalContentBaseProps {
+   mode: 'multiple'
+   dates?: CalendarDates
+   onChange?: MultiChange
+@@ -119,16 +120,16 @@ export function DatePickerModalContent(
+ 
+   const onInnerConfirm = React.useCallback(() => {
+     if (mode === 'single') {
+-      ;(onConfirm as DatePickerModalContentSingleProps['onConfirm'])({
++      ; (onConfirm as DatePickerModalContentSingleProps['onConfirm'])({
+         date: state.date,
+       })
+     } else if (mode === 'range') {
+-      ;(onConfirm as DatePickerModalContentRangeProps['onConfirm'])({
++      ; (onConfirm as DatePickerModalContentRangeProps['onConfirm'])({
+         startDate: state.startDate,
+         endDate: state.endDate,
+       })
+     } else if (mode === 'multiple') {
+-      ;(onConfirm as DatePickerModalContentMultiProps['onConfirm'])({
++      ; (onConfirm as DatePickerModalContentMultiProps['onConfirm'])({
+         dates: state.dates || [],
+       })
+     }
+@@ -186,6 +187,7 @@ export function DatePickerModalContent(
+             validRange={validRange}
+             dateMode={dateMode}
+             startYear={startYear}
++            startMonday={props.startMonday}
+             endYear={endYear}
+           />
+         }
+diff --git a/node_modules/react-native-paper-dates/src/Date/DayNames.tsx b/node_modules/react-native-paper-dates/src/Date/DayNames.tsx
+index 898969c..3e9eeb4 100644
+--- a/node_modules/react-native-paper-dates/src/Date/DayNames.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/DayNames.tsx
+@@ -7,7 +7,7 @@ import { DisableWeekDaysType, showWeekDay } from './dateUtils'
+ export const dayNamesHeight = 44
+ 
+ // TODO: wait for a better Intl api ;-)
+-const weekdays = [
++const weekdaysSunday = [
+   new Date(2020, 7, 2),
+   new Date(2020, 7, 3),
+   new Date(2020, 7, 4),
+@@ -17,19 +17,32 @@ const weekdays = [
+   new Date(2020, 7, 8),
+ ]
+ 
++const weekdaysMonday = [
++  new Date(2020, 7, 3),
++  new Date(2020, 7, 4),
++  new Date(2020, 7, 5),
++  new Date(2020, 7, 6),
++  new Date(2020, 7, 7),
++  new Date(2020, 7, 8),
++  new Date(2020, 7, 9),
++]
++
+ function DayNames({
+   disableWeekDays,
+   locale,
++  startMonday
+ }: {
+   locale: undefined | string
+-  disableWeekDays?: DisableWeekDaysType
++  disableWeekDays?: DisableWeekDaysType,
++  startMonday?: boolean
+ }) {
+   const theme = useTheme()
+   const shortDayNames = React.useMemo<string[]>(() => {
+     const formatter = new Intl.DateTimeFormat(locale, {
+       weekday: 'narrow',
+     })
+-    return weekdays.map((date) => formatter.format(date))
++
++    return (startMonday ? weekdaysMonday : weekdaysSunday).map((date) => formatter.format(date))
+   }, [locale])
+ 
+   return (
+diff --git a/node_modules/react-native-paper-dates/src/Date/Month.tsx b/node_modules/react-native-paper-dates/src/Date/Month.tsx
+index 818ca28..e9066c0 100644
+--- a/node_modules/react-native-paper-dates/src/Date/Month.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/Month.tsx
+@@ -54,7 +54,8 @@ interface BaseMonthProps {
+   startDate?: CalendarDate
+   endDate?: CalendarDate
+   date?: CalendarDate
+-  dates?: CalendarDates
++  dates?: CalendarDates,
++  startMonday?: boolean
+ }
+ 
+ interface MonthRangeProps extends BaseMonthProps {
+@@ -111,10 +112,10 @@ function Month(props: MonthSingleProps | MonthRangeProps | MonthMultiProps) {
+     const today = new Date()
+ 
+     const daysInMonth = getDaysInMonth({ year, month })
+-    const dayOfWeek = getFirstDayOfMonth({ year, month })
++    const dayOfWeek = getFirstDayOfMonth({ year, month }, { startMonday: Boolean(props.startMonday) })
+     const emptyDays = dayOfWeek
+ 
+-    return monthGrid(index).map(({ days, weekGrid }) => {
++    return monthGrid(index, { startMonday: Boolean(props.startMonday) }).map(({ days, weekGrid }) => {
+       return {
+         weekIndex: weekGrid,
+         generatedDays: days.map((_, dayIndex) => {
+@@ -255,15 +256,15 @@ function Month(props: MonthSingleProps | MonthRangeProps | MonthMultiProps) {
+     : (theme as any as MD2Theme).fonts.medium
+ 
+   return (
+-    <View style={[styles.month, { height: getMonthHeight(scrollMode, index) }]}>
++    <View style={[styles.month, { height: getMonthHeight(scrollMode, index, { startMonday: Boolean(props.startMonday) }) }]}>
+       <View
+         style={[
+           styles.monthHeader,
+           isHorizontal
+             ? {
+-                marginTop: monthHeaderSingleMarginTop,
+-                marginBottom: monthHeaderSingleMarginBottom,
+-              }
++              marginTop: monthHeaderSingleMarginTop,
++              marginBottom: monthHeaderSingleMarginBottom,
++            }
+             : null,
+         ]}
+       >
+@@ -311,8 +312,8 @@ function Month(props: MonthSingleProps | MonthRangeProps | MonthMultiProps) {
+                       ? 'menu-up'
+                       : 'chevron-up'
+                     : theme.isV3
+-                    ? 'menu-down'
+-                    : 'chevron-down'
++                      ? 'menu-down'
++                      : 'chevron-down'
+                 }
+               />
+             </View>
+@@ -383,8 +384,8 @@ const styles = StyleSheet.create({
+   opacity1: { opacity: 1 },
+ })
+ 
+-const monthGrid = (index: number) => {
+-  return Array(getGridCount(index))
++const monthGrid = (index: number, options: { startMonday: boolean }) => {
++  return Array(getGridCount(index, options))
+     .fill(null)
+     .map((_, weekGrid) => {
+       const days = Array(7).fill(null)
+@@ -400,7 +401,7 @@ function getIndexCount(index: number): number {
+   return -(startAtIndex - index)
+ }
+ 
+-function weeksOffset(index: number): number {
++function weeksOffset(index: number, options: { startMonday: boolean }): number {
+   if (index === startAtIndex) {
+     return 0
+   }
+@@ -408,12 +409,12 @@ function weeksOffset(index: number): number {
+   if (index > startAtIndex) {
+     for (let i = 0; i < index - startAtIndex; i++) {
+       const cIndex = startAtIndex + i
+-      off += gridCounts[cIndex] || getGridCount(cIndex)
++      off += gridCounts[cIndex] || getGridCount(cIndex, options)
+     }
+   } else {
+     for (let i = 0; i < startAtIndex - index; i++) {
+       const cIndex = startAtIndex - i - 1
+-      off -= gridCounts[cIndex] || getGridCount(cIndex)
++      off -= gridCounts[cIndex] || getGridCount(cIndex, options)
+     }
+   }
+   return off
+@@ -426,10 +427,10 @@ export function getIndexFromHorizontalOffset(
+   return startAtIndex + Math.floor(offset / width)
+ }
+ 
+-export function getIndexFromVerticalOffset(offset: number): number {
++export function getIndexFromVerticalOffset(offset: number, options: { startMonday: boolean }): number {
+   let estimatedIndex = startAtIndex + Math.ceil(offset / estimatedMonthHeight)
+ 
+-  const realOffset = getVerticalMonthsOffset(estimatedIndex)
++  const realOffset = getVerticalMonthsOffset(estimatedIndex, options)
+   const difference = (realOffset - beginOffset - offset) / estimatedMonthHeight
+   if (difference >= 1 || difference <= -1) {
+     estimatedIndex -= Math.floor(difference)
+@@ -444,9 +445,9 @@ export function getHorizontalMonthOffset(index: number, width: number) {
+   return width * index
+ }
+ 
+-export function getVerticalMonthsOffset(index: number) {
++export function getVerticalMonthsOffset(index: number, options: { startMonday: boolean }) {
+   const count = getIndexCount(index)
+-  const ob = weeksOffset(index)
++  const ob = weeksOffset(index, options)
+   const monthsHeight = weekSize * ob
+   const c = monthsHeight + count * (dayNamesHeight + montHeaderHeight)
+ 
+@@ -455,10 +456,11 @@ export function getVerticalMonthsOffset(index: number) {
+ 
+ export function getMonthHeight(
+   scrollMode: 'horizontal' | 'vertical',
+-  index: number
++  index: number,
++  options: { startMonday: boolean }
+ ): number {
+   const calendarHeight = getCalendarHeaderHeight(scrollMode)
+-  const gc = getGridCount(index)
++  const gc = getGridCount(index, options)
+ 
+   const currentMonthHeight = weekSize * gc
+   const extraHeight =
+diff --git a/node_modules/react-native-paper-dates/src/Date/Swiper.native.tsx b/node_modules/react-native-paper-dates/src/Date/Swiper.native.tsx
+index f80d2cc..0ebff88 100644
+--- a/node_modules/react-native-paper-dates/src/Date/Swiper.native.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/Swiper.native.tsx
+@@ -56,6 +56,7 @@ function SwiperInner({
+   initialIndex,
+   width,
+   height,
++  startMonday
+ }: SwiperProps & { width: number; height: number }) {
+   const idx = React.useRef<number>(initialIndex)
+   const isHorizontal = scrollMode === 'horizontal'
+@@ -75,7 +76,7 @@ function SwiperInner({
+       }
+       const offset = isHorizontal
+         ? getHorizontalMonthOffset(index, width)
+-        : getVerticalMonthsOffset(index) - montHeaderHeight
++        : getVerticalMonthsOffset(index, { startMonday: Boolean(startMonday) }) - montHeaderHeight
+ 
+       if (isHorizontal) {
+         parentRef.current.scrollTo({
+@@ -112,7 +113,7 @@ function SwiperInner({
+       const viewSize = e.nativeEvent.layoutMeasurement
+       const newIndex = isHorizontal
+         ? Math.floor(contentOffset.x / viewSize.width)
+-        : getIndexFromVerticalOffset(contentOffset.y - beginOffset)
++        : getIndexFromVerticalOffset(contentOffset.y - beginOffset, { startMonday: Boolean(startMonday) })
+ 
+       if (newIndex === 0) {
+         return
+@@ -173,32 +174,32 @@ function SwiperInner({
+         >
+           {visibleIndexes
+             ? new Array(visibleIndexes.length).fill(undefined).map((_, vi) => (
+-                <View
+-                  key={vi}
+-                  // eslint-disable-next-line react-native/no-inline-styles
+-                  style={{
+-                    top: isHorizontal
+-                      ? 0
+-                      : getVerticalMonthsOffset(visibleIndexes[vi]),
+-                    left: isHorizontal
+-                      ? getHorizontalMonthOffset(visibleIndexes[vi], width)
+-                      : 0,
+-                    right: isHorizontal ? undefined : 0,
+-                    bottom: isHorizontal ? 0 : undefined,
+-                    position: 'absolute',
+-                    width: isHorizontal ? width : undefined,
+-                    height: isHorizontal
+-                      ? undefined
+-                      : getMonthHeight(scrollMode, visibleIndexes[vi]),
+-                  }}
+-                >
+-                  {renderItem({
+-                    index: visibleIndexes[vi],
+-                    onPrev: onPrev,
+-                    onNext: onNext,
+-                  })}
+-                </View>
+-              ))
++              <View
++                key={vi}
++                // eslint-disable-next-line react-native/no-inline-styles
++                style={{
++                  top: isHorizontal
++                    ? 0
++                    : getVerticalMonthsOffset(visibleIndexes[vi], { startMonday: Boolean(startMonday) }),
++                  left: isHorizontal
++                    ? getHorizontalMonthOffset(visibleIndexes[vi], width)
++                    : 0,
++                  right: isHorizontal ? undefined : 0,
++                  bottom: isHorizontal ? 0 : undefined,
++                  position: 'absolute',
++                  width: isHorizontal ? width : undefined,
++                  height: isHorizontal
++                    ? undefined
++                    : getMonthHeight(scrollMode, visibleIndexes[vi], { startMonday: Boolean(startMonday) }),
++                }}
++              >
++                {renderItem({
++                  index: visibleIndexes[vi],
++                  onPrev: onPrev,
++                  onNext: onNext,
++                })}
++              </View>
++            ))
+             : null}
+         </View>
+       </ScrollView>
+diff --git a/node_modules/react-native-paper-dates/src/Date/Swiper.tsx b/node_modules/react-native-paper-dates/src/Date/Swiper.tsx
+index 33f3ccd..aa33795 100644
+--- a/node_modules/react-native-paper-dates/src/Date/Swiper.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/Swiper.tsx
+@@ -20,6 +20,7 @@ function Swiper({
+   renderFooter,
+   selectedYear,
+   initialIndex,
++  startMonday
+ }: SwiperProps) {
+   const isHorizontal = scrollMode === 'horizontal'
+   const [index, setIndex] = React.useState(initialIndex)
+@@ -66,6 +67,7 @@ function Swiper({
+               initialIndex={initialIndex}
+               estimatedHeight={estimatedMonthHeight}
+               renderItem={renderItem}
++              startMonday={Boolean(startMonday)}
+             />
+           )}
+         </AutoSizer>
+@@ -83,12 +85,14 @@ function VerticalScroller({
+   initialIndex,
+   estimatedHeight,
+   renderItem,
++  startMonday
+ }: {
+   renderItem: (renderProps: RenderProps) => any
+   width: number
+   height: number
+   initialIndex: number
+-  estimatedHeight: number
++  estimatedHeight: number,
++  startMonday: boolean
+ }) {
+   const idx = React.useRef<number>(initialIndex)
+   const [visibleIndexes, setVisibleIndexes] = React.useState<number[]>(
+@@ -101,7 +105,7 @@ function VerticalScroller({
+     if (!element) {
+       return
+     }
+-    const top = getVerticalMonthsOffset(idx.current) - montHeaderHeight
++    const top = getVerticalMonthsOffset(idx.current, { startMonday: startMonday }) - montHeaderHeight
+ 
+     element.scrollTo({
+       top,
+@@ -118,7 +122,7 @@ function VerticalScroller({
+       }
+ 
+       const offset = top - beginOffset
+-      const index = getIndexFromVerticalOffset(offset)
++      const index = getIndexFromVerticalOffset(offset, { startMonday: startMonday })
+ 
+       if (idx.current !== index) {
+         idx.current = index
+@@ -153,12 +157,13 @@ function VerticalScroller({
+             style={{
+               willChange: 'transform',
+               transform: `translateY(${getVerticalMonthsOffset(
+-                visibleIndexes[vi]
++                visibleIndexes[vi],
++                { startMonday: startMonday }
+               )}px)`,
+               left: 0,
+               right: 0,
+               position: 'absolute',
+-              height: getMonthHeight('vertical', visibleIndexes[vi]),
++              height: getMonthHeight('vertical', visibleIndexes[vi], { startMonday: startMonday }),
+             }}
+           >
+             {renderItem({
+diff --git a/node_modules/react-native-paper-dates/src/Date/SwiperUtils.ts b/node_modules/react-native-paper-dates/src/Date/SwiperUtils.ts
+index 8a98be8..0735536 100644
+--- a/node_modules/react-native-paper-dates/src/Date/SwiperUtils.ts
++++ b/node_modules/react-native-paper-dates/src/Date/SwiperUtils.ts
+@@ -20,7 +20,8 @@ export type SwiperProps = {
+   renderItem: (renderProps: RenderProps) => any
+   renderHeader?: (renderProps: RenderProps) => any
+   renderFooter?: (renderProps: RenderProps) => any
+-  selectedYear: number | undefined
++  selectedYear: number | undefined,
++  startMonday?: boolean
+ }
+ 
+ export function useYearChange(
+diff --git a/node_modules/react-native-paper-dates/src/Date/dateUtils.tsx b/node_modules/react-native-paper-dates/src/Date/dateUtils.tsx
+index 26131a3..78cd55e 100644
+--- a/node_modules/react-native-paper-dates/src/Date/dateUtils.tsx
++++ b/node_modules/react-native-paper-dates/src/Date/dateUtils.tsx
+@@ -61,8 +61,12 @@ export function getFirstDayOfMonth({
+ }: {
+   year: number
+   month: number
+-}): number {
+-  return new Date(year, month, 1).getDay()
++}, options: { startMonday: boolean }): number {
++  const numberDayWeekSunday = [0, 1, 2, 3, 4, 5, 6]
++  const numberDayWeekMonday = [6, 0, 1, 2, 3, 4, 5]
++  const dayWeek = new Date(year, month, 1).getDay()
++
++  return (options.startMonday ? numberDayWeekMonday : numberDayWeekSunday)[dayWeek]
+ }
+ 
+ export function useRangeChecker(validRange: ValidRangeType | undefined) {
+@@ -92,8 +96,8 @@ export function useRangeChecker(validRange: ValidRangeType | undefined) {
+     (day: Date) => {
+       return validDisabledDatesRef.current
+         ? validDisabledDatesRef.current.some((disabledDate) =>
+-            areDatesOnSameDay(disabledDate, day)
+-          )
++          areDatesOnSameDay(disabledDate, day)
++        )
+         : false
+     },
+     [validDisabledDatesRef]
+@@ -167,22 +171,22 @@ export const totalMonths = startAtIndex * 2
+ export const beginOffset = estimatedMonthHeight * startAtIndex
+ export const gridCounts = new Array<number | undefined>(totalMonths)
+ 
+-export function getGridCount(index: number) {
++export function getGridCount(index: number, options: { startMonday: boolean }) {
+   const cHeight = gridCounts[index]
+   if (cHeight) {
+     return cHeight
+   }
+   const monthDate = addMonths(new Date(), getRealIndex(index))
+-  const h = getGridCountForDate(monthDate)
++  const h = getGridCountForDate(monthDate, options)
+   gridCounts[index] = h
+   return h
+ }
+ 
+-export function getGridCountForDate(date: Date) {
++export function getGridCountForDate(date: Date, options: { startMonday: boolean }) {
+   const year = date.getFullYear()
+   const month = date.getMonth()
+   const daysInMonth = getDaysInMonth({ year, month })
+-  const dayOfWeek = getFirstDayOfMonth({ year, month })
++  const dayOfWeek = getFirstDayOfMonth({ year, month }, options)
+   return Math.ceil((daysInMonth + dayOfWeek) / 7)
+ }
+ 
