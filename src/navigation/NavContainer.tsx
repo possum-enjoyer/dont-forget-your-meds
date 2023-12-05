@@ -6,11 +6,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const NavContainer = ({ children }: { children: React.ReactNode }) => {
     const theme = useMD3Theme();
-    // const { LightTheme, DarkTheme } = adaptNavigationTheme({ reactNavigationDark: NavigationDarkTheme, reactNavigationLight: NavigationLightTheme, materialDark: theme, materialLight: theme });
+    const { LightTheme, DarkTheme } = adaptNavigationTheme({ reactNavigationDark: NavigationDarkTheme, reactNavigationLight: NavigationLightTheme, materialDark: theme, materialLight: theme });
 
-    const navTheme = theme.dark ? NavigationDarkTheme : NavigationLightTheme;
-
-    console.log(navTheme)
+    const navTheme = theme.dark ? DarkTheme : LightTheme;
 
     return (
         <NavigationContainer theme={navTheme}>

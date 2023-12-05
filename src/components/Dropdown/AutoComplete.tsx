@@ -38,6 +38,11 @@ export const Autocomplete = <TOption extends Option = Option>({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [valueFromProps]);
 
+    const ontextChange = (v: string) => {
+        console.log(v)
+        setTextValue(v)
+    };
+
     return (
         <DropdownBaseContext.Provider value={{
             open,
@@ -45,8 +50,8 @@ export const Autocomplete = <TOption extends Option = Option>({
             setWidth,
             width,
         }}>
-            <DropdownBase editable={true} onChange={onChange} textRef={textRef} {...restProps} defaultValue={valueFromProps ?? ""} onFocus={() => setOpen(true)}
-                onBlur={() => { setTextValue(valueFromProps ?? ""); setOpen(false); }} onChangeText={setTextValue}>
+            <DropdownBase value={textValue} editable={true} onChange={onChange} textRef={textRef} {...restProps} defaultValue={valueFromProps ?? ""} onFocus={() => setOpen(true)}
+                onBlur={() => { setTextValue(valueFromProps ?? ""); setOpen(false); }} onChangeText={ontextChange}>
                 {options.filter(s => {
                     if (typeof s === "string") {
                         return s.includes(textValue);

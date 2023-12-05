@@ -7,13 +7,12 @@ import { TimePickerModal } from 'react-native-paper-dates';
 import { RootStackScreenProps } from '../navigation';
 import { useMD3Theme, useMedStore } from '../providers';
 import { useMedicationStore } from '../hooks';
-import { Medication } from '../interfaces';
+import { DiscriminatedOmit, Medication } from '../interfaces';
 
 export type MedicationFormProps = {
     formData: Medication
 };
-
-export type FormData = Omit<Medication, 'id'>
+export type FormData = DiscriminatedOmit<Medication, 'id'>
 
 
 type ControlledTimePickerProps<TFieldValues extends FieldValues, TPath extends FieldPathByValue<TFieldValues, Medication['timeSlot']>> = Parameters<ControllerProps<TFieldValues, TPath>["render"]>[0]
@@ -36,6 +35,7 @@ const ControlledTimePicker = <TFieldValues extends FieldValues, TPath extends Fi
     return <View>
         <Button ref={props.field.ref} style={[styles.controller]} onPress={() => setVisible(true)}>Time to take</Button>
         <TimePickerModal
+            use24HourClock
             locale="de"
             visible={visible}
             onDismiss={onDismiss}

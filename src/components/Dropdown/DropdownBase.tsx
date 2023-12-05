@@ -56,6 +56,7 @@ const DropdownBase = ({
     }, [valueFromProps]);
 
     const value = isControlled ? valueFromProps : internalValue;
+    console.log(typeof valueFromProps)
     const valueText = typeof valueTextFromProps !== "undefined" ? valueTextFromProps : value;
     return (
         <View>
@@ -80,6 +81,7 @@ const DropdownBase = ({
                                 }
                                 value={valueText ?? ""}
                                 ref={textRef}
+                                onChangeText={textInputProps.onChangeText}
                                 {...textInputProps}
                             />
                         </TouchableRipple>
