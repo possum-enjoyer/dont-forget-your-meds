@@ -8,11 +8,13 @@ import { RootStackScreenProps } from '../navigation';
 import { useMD3Theme, useMedStore } from '../providers';
 import { useMedicationStore } from '../hooks';
 import { DiscriminatedOmit, Medication } from '../interfaces';
+import { Autocomplete, Dropdown } from '../components';
 
 export type MedicationFormProps = {
     formData: Medication
 };
 export type FormData = DiscriminatedOmit<Medication, 'id'>
+
 
 
 type ControlledTimePickerProps<TFieldValues extends FieldValues, TPath extends FieldPathByValue<TFieldValues, Medication['timeSlot']>> = Parameters<ControllerProps<TFieldValues, TPath>["render"]>[0]
@@ -100,6 +102,48 @@ export const MedicationForm = ({ route: { params }, navigation }: RootStackScree
                         <View>
                             <Controller control={form.control} name="timeSlot" rules={{ required: true }}
                                 render={ControlledTimePicker}
+                            />
+                        </View>
+                        <View>
+                            <Controller control={form.control} name="repeat" rules={{ required: true }}
+                                render={({ field: { onChange, value } }) => {
+                                    return (
+                                        <Dropdown mode='outlined' defaultValue={'daily'} onChange={onChange}>
+                                            {
+                                                ['daily', 'weekly'].map(answer => <Dropdown.Item key={answer} title={answer} value={answer} />)
+                                            }
+
+                                        </Dropdown>
+                                    );
+                                }}
+                            />
+                        </View>
+                        <View>
+                            <Controller control={form.control} name="weekDay" rules={{ required: true }}
+                                render={({ field: { onChange, value } }) => {
+                                    return (
+                                        <Dropdown mode='outlined' defaultValue={0} onChange={onChange}>
+                                            {
+                                                [0, 1, 2, 3, 4, 5, 6].map(answer => <Dropdown.Item key={answer} title={answer} value={answer} />)
+                                            }
+
+                                        </Dropdown>
+                                    );
+                                }}
+                            />
+                        </View>
+                        <View style={{ margin: 32 }}>
+                            <Controller control={form.control} name='takenWithMeal' rules={{ required: true }}
+                                render={({ field: { onChange, value } }) => {
+                                    return (
+                                        <Dropdown mode='outlined' defaultValue={'Yes'} onChange={onChange}>
+                                            {
+                                                [{ ans: 'Yes', v: true }, { ans: 'No', v: false }].map(answer => <Dropdown.Item key={answer.ans} title={answer.ans} value={answer.v} />)
+                                            }
+
+                                        </Dropdown>
+                                    )
+                                }}
                             />
                         </View>
                         <Button style={styles.controller} mode="elevated" onPress={form.handleSubmit(onSubmit, onError)}>Submit</Button>

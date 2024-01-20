@@ -68,11 +68,13 @@ export const buildSyncedStore = <Store,>(initialStoreState: Store) => {
             throw new Error("Store not found. Maybe the Store was not inside it's corresponding Provider");
         }
 
-        const selectFunction = selector ? selector : (currentStore: Store) => currentStore as unknown as SelectorOutput;
+        const selectFunction = React.useMemo(() => selector ? selector : (currentStore: Store) => currentStore as unknown as SelectorOutput, [selector]);
+
+        const memorized = React.useCallback(() => selectFunction(store.getter()), [selectFunction, store]);
 
         const state = useSyncExternalStore(
             store.subscribe,
-            () => selectFunction(store.getter()),
+            memorized,
             () => selectFunction(initialStoreState),
         );
 

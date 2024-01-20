@@ -2,11 +2,11 @@ import React, { useContext } from "react";
 import { Menu, MenuItemProps } from "react-native-paper";
 import DropdownContext from "./DropdownContext";
 
-export interface Props extends Omit<MenuItemProps, 'onPress'> {
-    value: string;
+export interface Props<TValue> extends Omit<MenuItemProps, 'onPress'> {
+    value: TValue;
 }
 
-const DropdownItem = (props: Props) => {
+const DropdownItem = <TValue,>(props: Props<TValue>) => {
     const dropdownContext = useContext(DropdownContext);
 
     return <Menu.Item style={{ maxWidth: undefined }} onPress={() => dropdownContext.onChange?.(props.value)} {...props} />;

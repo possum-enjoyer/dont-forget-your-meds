@@ -9,9 +9,9 @@ export type PaperTextInputRef = NativeTextInput & TextInputProps;
 
 export type Option = string | { title: string, value: string };
 
-export type AutocompleteProps<TOption extends Option = Option> = Omit<DropdownBaseProps, 'onBlur' | 'onFocus' | 'editable' | 'children'> & {
+export type AutocompleteProps<TOption extends Option = Option> = Omit<DropdownBaseProps<string>, 'onBlur' | 'onFocus' | 'editable' | 'children'> & {
     options: TOption[]
-    renderItem: (item: TOption) => React.ReactElement<DropdownItemProps>
+    renderItem: (item: TOption) => React.ReactElement<DropdownItemProps<string>>
 };
 
 export const Autocomplete = <TOption extends Option = Option>({
@@ -21,7 +21,7 @@ export const Autocomplete = <TOption extends Option = Option>({
     onChange: onChangeFromProps,
     ...restProps
 }: AutocompleteProps<TOption>) => {
-    const textRef: DropdownBaseProps['textRef'] | undefined = React.useRef(null);
+    const textRef: DropdownBaseProps<string>['textRef'] | undefined = React.useRef(null);
     const [textValue, setTextValue] = useState<string>(valueFromProps ?? "");
     const [width, setWidth] = useState(0);
     const [open, setOpen] = useState(false);

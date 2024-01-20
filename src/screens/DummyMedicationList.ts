@@ -11,7 +11,7 @@ export const DummyMedicationList: Medication[] = [
             hours: 15,
             minutes: 10,
         },
-        title: 'Test',
+        title: 'Ibuprofen',
     },
     {
         dosage: 5,

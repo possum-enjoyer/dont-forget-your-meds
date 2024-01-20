@@ -1,5 +1,4 @@
 import React, { createContext, useContext } from 'react';
-import { useColorScheme } from 'react-native';
 import { useMaterial3Theme as usePCHMMaterial3Theme, type Material3Theme, Material3Scheme } from '@pchmn/expo-material3-theme';
 import { MD3DarkTheme, MD3LightTheme, MD3Theme, PaperProvider, ProviderProps, useTheme } from 'react-native-paper';
 import { useSystemColorScheme } from '../hooks';

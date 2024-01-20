@@ -1,114 +1,179 @@
 import React from 'react';
-import { AnimatedFAB, Button, Text, Chip, IconButton, PaperProvider, Card, Menu, Divider, Surface } from 'react-native-paper';
+import { AnimatedFAB, Button, Text, Chip, IconButton, PaperProvider, Card, Menu, Surface } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, FlatList, View } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent, StyleSheet, FlatList, View } from 'react-native';
 import { useMD3Theme, useMedStore } from '../providers';
 import { RootStackScreenProps } from '../navigation';
 import { Calendar } from 'react-native-paper-dates';
-import Animated, { useSharedValue, withSpring, withDelay, withTiming } from 'react-native-reanimated';
-import { IconSource } from 'react-native-paper/lib/typescript/components/Icon';
+import Animated, { useSharedValue, withSpring, } from 'react-native-reanimated';
 import { Medication } from '../interfaces';
+import { buildSyncedStore } from '../hooks/SyncedStoreBuilder';
+import { DateTime } from 'luxon';
+
+type DateStoreType = {
+    date: Date
+}
+
+const DateStore = buildSyncedStore({ date: new Date() } as DateStoreType);
+
+const useDateStore = DateStore.useStore;
+const DateStoreProvider = DateStore.StoreProvider;
 
 
+const getAllMonthDatesByDate = (date: Date): DateTime[] => {
+    const parsedDate = DateTime.fromJSDate(date)
 
-const getAllWeekDatesByDate = (date: Date): Date[] => {
-    let week: Date[] = [];
-    const copiedDate = new Date(date);
-    const firstDate = copiedDate.getDate() - copiedDate.getDay() + 1;
-
-    copiedDate.setDate(firstDate);
-    for (let i = 0; i < 7; i++) {
-        week.push(new Date(copiedDate));
-        copiedDate.setDate(copiedDate.getDate() + 1);
-    }
-    return week;
+    return Array.from(Array(parsedDate.daysInMonth), (_, x: number) => {
+        return DateTime.local(parsedDate.year, parsedDate.month, x + 1);
+    });
 };
 
 const ChipSelectedWeek = () => {
-    const currentDate = new Date();
+    const flatRef = React.useRef<FlatList<DateTime>>(null);
+    const [date, setDate] = useDateStore(s => s.date);
 
-    const week = getAllWeekDatesByDate(currentDate);
-    console.log(week);
+    React.useEffect(() => {
+        flatRef.current?.scrollToIndex({ index: date.getDate() - 1 });
+    }, [date])
 
-    return week.map(w => {
-        return <Chip key={w.getUTCDate()} onPress={() => { }} mode={currentDate.getUTCDate() === w.getUTCDate() ? 'flat' : 'outlined'}>
-            {w.getUTCDate()}
-        </Chip>
-    })
+    const week = React.useMemo(() => getAllMonthDatesByDate(date), [date]);
+    return <FlatList onScrollToIndexFailed={({ index }) => { console.log(index) }} ref={flatRef} scrollEnabled showsHorizontalScrollIndicator={false} horizontal contentContainerStyle={{ alignItems: "center", justifyContent: 'space-between', flexDirection: 'row' }} data={week} renderItem={({ item: weekDay }) => {
+        return <Chip key={weekDay.toJSDate().toUTCString()} onPress={() => { setDate({ date: weekDay.toJSDate() }); }} mode={date.getUTCDate() === weekDay.toJSDate().getUTCDate() ? 'flat' : 'outlined'}>
+            {weekDay.toFormat('EEEEE')}
+            {weekDay.toFormat('dd')}
+        </Chip>;
+    }} />;
+
+};
+
+const OwnCalendar = () => {
+
+    const [date, setDate] = useDateStore(s => s.date);
 
 
-}
+    return <Calendar date={date} onChange={(newDate) => { setDate({ date: newDate.date || new Date() }); }} locale='de' mode='single' startMonday={true} />;
 
-const AnimatedIconButton = Animated.createAnimatedComponent(IconButton);
+};
 
 const CalendarComponent = () => {
     const theme = useMD3Theme();
     const flex = useSharedValue(0);
-    const display = useSharedValue<'flex' | 'none'>('flex');
+    const display1 = useSharedValue<'flex' | 'none'>('flex');
     const display2 = useSharedValue<'flex' | 'none'>('none');
 
     const bgColor = theme.colors.surfaceContainer;
 
     const clickOpenButton = React.useCallback(() => {
         const isExpand = flex.value > 0;
-        flex.value = withTiming(isExpand ? 0 : 2);
-        display.value = isExpand ? 'flex' : 'none'
-        display2.value = isExpand ? 'none' : 'flex'
-    }, [flex, display, display2]);
+        flex.value = withSpring(isExpand ? 0 : 1.5);
+        display1.value = isExpand ? 'flex' : 'none';
+        display2.value = isExpand ? 'none' : 'flex';
+    }, [flex, display1, display2]);
+
+
 
     return (
         <Animated.View style={{ flex, display: 'flex', backgroundColor: bgColor, margin: 8 }}>
             <Animated.View style={{ alignItems: "center", justifyContent: 'space-between', flexDirection: 'row' }}>
-                <ChipSelectedWeek ></ChipSelectedWeek>
+                <ChipSelectedWeek />
             </Animated.View>
             <PaperProvider theme={{ ...theme, colors: { ...theme.colors, surface: bgColor } }}>
-                <Calendar date={new Date()} onChange={(date) => { }} dates={null} locale='de' mode='single' startMonday={true} />
+                <OwnCalendar />
             </PaperProvider>
             <View style={{ alignItems: 'center' }}>
-                <AnimatedIconButton icon={'chevron-down'} style={{ display }} onPress={() => clickOpenButton()} />
-                <AnimatedIconButton icon={'chevron-up'} style={{ display: display2 }} onPress={() => clickOpenButton()} />
+                <Animated.View style={{ display: display1 }}>
+                    <IconButton icon={'chevron-down'} onPress={() => clickOpenButton()} />
+                </Animated.View>
+                <Animated.View style={{ display: display2 }}>
+
+                    <IconButton icon={'chevron-up'} onPress={() => clickOpenButton()} />
+                </Animated.View>
             </View>
 
         </Animated.View>
-    )
-}
+    );
+};
 
-const MedicationCardMenu = ({ visible, closeMenu, openMenu }: { visible: boolean, closeMenu: () => void, openMenu: () => void }) => {
+const MedicationCardMenu = ({ visible, closeMenu, openMenu, medication, deleteMedication }: {
+    visible: boolean,
+    closeMenu: () => void,
+    openMenu: () => void,
+    medication: Medication,
+    deleteMedication: (id: Medication['id']) => void
+}) => {
+    const navigation = useNavigation<RootStackScreenProps<"MedicationForm">["navigation"]>();
+
     return (
         <Menu
             visible={visible}
             onDismiss={closeMenu}
             anchor={<IconButton icon={"dots-vertical"} onPress={openMenu} />}>
-            <Menu.Item onPress={() => { }} title="Edit" />
-            <Menu.Item onPress={() => { }} title="Delete" />
+            <Menu.Item onPress={() => { closeMenu(); navigation.navigate('MedicationForm', { formData: medication }); }} title="Edit" />
+            <Menu.Item onPress={() => { deleteMedication(medication.id) }} title="Delete" />
         </Menu>
-    )
-}
+    );
+};
 
-const MedicationCard = ({ medication }: { medication: Medication }) => {
+const MedicationCard = ({ medicationId }: { medicationId: string }) => {
+
+    const [medication, setMedication] = useMedStore(s => s.medication.find(m => m.id === medicationId) || s.medication[0]);
+    const [date] = useDateStore(s => s.date);
+
+
+    const updateSelectedMedication = React.useCallback(() => {
+        setMedication(old => {
+            old.medication = old.medication.map(m => {
+                if (m.id !== medication.id) {
+                    return m;
+                }
+                m.lastTakenTimeStamps.push(date);
+                return m;
+            });
+            return old;
+        });
+    }, [date, medication.id, setMedication]);
+
+    const deleteMedicationFromStore = React.useCallback((id: Medication['id']) => {
+        setMedication(old => {
+            old.medication = old.medication.filter(m => m.id !== id);
+            return old;
+        })
+    }, [setMedication])
+
+
     const [isMenuVisible, setMenu] = React.useState<boolean>(false);
+    if (medication.repeat === 'weekly' && medication.weekDay !== date.getDate()) {
+        return <></>
+    }
     return (
         <Card key={medication.id} style={{ margin: 32 }}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" right={(props) => MedicationCardMenu({
-                visible: isMenuVisible,
-                closeMenu: () => setMenu(false),
-                openMenu: () => setMenu(true)
-            })} />
+            <Card.Title title={medication.title} right={
+                (props) =>
+                    <MedicationCardMenu
+                        visible={isMenuVisible}
+                        closeMenu={() => setMenu(false)}
+                        openMenu={() => setMenu(true)}
+                        medication={medication} deleteMedication={deleteMedicationFromStore} />}
+            />
 
-            <Card.Content>
-                <Text variant="titleLarge">{medication.title}</Text>
-                <Text variant="bodyMedium">Card content</Text>
-            </Card.Content>
+            {medication.takenWithMeal &&
+                <Card.Content>
+                    <Text> Taken with Meal </Text>
+                </Card.Content>
+            }
             <Card.Actions>
-                <Button>Cancel</Button>
-                <Button>Ok</Button>
+                <Text>
+                    {medication.timeSlot.hours}:{medication.timeSlot.minutes}
+                </Text>
+                {medication.lastTakenTimeStamps?.some(d => d.toDateString() === date.toDateString()) ? <IconButton icon="check" /> : <Button onPress={() => updateSelectedMedication()}>Done</Button>}
+
             </Card.Actions>
         </Card>
-    )
-}
+    );
+};
 
-export function Home(): JSX.Element {
+export const Home = (): Element => {
     const [isExtended, setIsExtended] = React.useState(true);
     const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
         const currentScrollPosition = Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
@@ -122,31 +187,35 @@ export function Home(): JSX.Element {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.surfaceContainer }} mode='margin' edges={{ bottom: "off", top: 'off', right: 'additive', left: 'additive' }}>
-            <CalendarComponent />
-            <View style={{ flex: 1, }} >
-                <Surface style={{ backgroundColor: theme.colors.surface, width: '100%', borderRadius: 35 }} elevation={5}>
-                    <FlatList
-                        data={medication}
-                        renderItem={m => <MedicationCard medication={m.item} />}
-                        onScroll={onScroll}
-                    />
-                    {/* <ScrollView onScroll={onScroll} contentContainerStyle={{ width: '50%' }}>
+            <DateStoreProvider>
+                <CalendarComponent />
+                <View style={{ flex: 1, }} >
+                    <Surface style={{ backgroundColor: theme.colors.surface, width: '100%', borderTopLeftRadius: 36, borderTopRightRadius: 36 }} elevation={5}>
+                        <FlatList
+                            data={medication.map(m => m.id)}
+                            renderItem={m => <MedicationCard medicationId={m.item} />}
+                            showsHorizontalScrollIndicator={false}
+                            showsVerticalScrollIndicator={false}
+                            onScroll={onScroll}
+                        />
+                        {/* <ScrollView onScroll={onScroll} contentContainerStyle={{ width: '50%' }}>
                     {
                         medication.map(m => <MedicationCard medication={m} />)
                     }
                 </ScrollView> */}
-                </Surface>
+                    </Surface>
 
-            </View>
+                </View>
 
 
 
-            <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon="plus" onPress={() => {
-                navigation.navigate("MedicationForm");
-            }} />
+                <AnimatedFAB style={styles.fab} extended={isExtended} label="Add Medication" icon="plus" onPress={() => {
+                    navigation.navigate("MedicationForm");
+                }} />
+            </DateStoreProvider>
         </SafeAreaView >
     );
-}
+};
 
 const styles = StyleSheet.create({
     fab: {

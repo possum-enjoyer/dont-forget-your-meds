@@ -4,12 +4,12 @@ import DropdownContext from "./DropdownContext";
 import { Props as DropdownItemProps } from "./DropdownItem";
 import { Menu, TextInputProps, TouchableRipple, TextInput, Text } from "react-native-paper";
 
-export interface Props extends Omit<TextInputProps, 'value' | 'onChange'> {
-    children?: ReactElement<DropdownItemProps> | Array<ReactElement<DropdownItemProps>>;
-    onChange?: (value: string | null) => void;
-    value?: string | null;
+export interface Props<TValue> extends Omit<TextInputProps, 'value' | 'onChange' | 'defaultValue'> {
+    children?: ReactElement<DropdownItemProps<TValue>> | Array<ReactElement<DropdownItemProps<TValue>>>;
+    onChange?: (value: TValue) => void;
+    value?: TValue;
     valueText?: string;
-    defaultValue?: string;
+    defaultValue?: TValue;
     required?: boolean;
     textRef?: React.RefObject<NativeTextInput>
 }
@@ -30,7 +30,7 @@ export const DropdownBaseContext = React.createContext<DropdownBaseContextData>(
     }
 );
 
-const DropdownBase = ({
+const DropdownBase = <TValue,>({
     value: valueFromProps,
     valueText: valueTextFromProps,
     required,
@@ -39,7 +39,7 @@ const DropdownBase = ({
     children,
     textRef,
     ...textInputProps
-}: Props) => {
+}: Props<TValue>) => {
     const isControlled = typeof valueFromProps !== "undefined";
     const {
         width,
@@ -47,7 +47,7 @@ const DropdownBase = ({
         open,
         setOpen,
     } = React.useContext(DropdownBaseContext);
-    const [internalValue, setInternalValue] = useState<string | null>(defaultValue ?? null);
+    const [internalValue, setInternalValue] = useState<TValue | undefined>(defaultValue);
 
     useEffect(() => {
         if (typeof valueFromProps !== "undefined") {
@@ -72,14 +72,14 @@ const DropdownBase = ({
                             <TextInput
                                 editable={false}
                                 right={
-                                    value && !required ?
+                                    value !== undefined && value !== null && !required ?
                                         <TextInput.Icon icon="close-circle-outline" onPress={() => {
-                                            onChange?.(null);
-                                            setInternalValue(null);
+                                            onChange?.(undefined as TValue);
+                                            setInternalValue(undefined as TValue);
                                         }} />
                                         : undefined
                                 }
-                                value={valueText ?? ""}
+                                value={valueText?.toString() ?? ""}
                                 ref={textRef}
                                 onChangeText={textInputProps.onChangeText}
                                 {...textInputProps}
@@ -97,8 +97,8 @@ const DropdownBase = ({
                 }}>
                 <DropdownContext.Provider value={{
                     onChange: (newValue) => {
-                        setInternalValue(newValue);
-                        onChange?.(newValue);
+                        setInternalValue(newValue as TValue);
+                        onChange?.(newValue as TValue);
                         setOpen(false);
                         textRef?.current?.blur();
                     },

@@ -6,7 +6,7 @@ type DropdownExport = typeof DropdownComponent & {
     Item: typeof DropdownItem;
 };
 
-const DropdownComponent = (props: DropdownbaseProps) => {
+const DropdownComponent = <TValue,>(props: DropdownbaseProps<TValue>) => {
     const [width, setWidth] = useState(0);
     const [open, setOpen] = useState(false);
 

@@ -1,9 +1,9 @@
-import {createContext} from "react";
+import { createContext } from "react";
 
-export interface DropdownContextData {
-  onChange?: (value: string) => void;
+export interface DropdownContextData<TValue> {
+  onChange?: (value: TValue) => void;
 }
 
-const DropdownContext = createContext<DropdownContextData>({});
+const DropdownContext = createContext<DropdownContextData<unknown>>({});
 
 export default DropdownContext;
