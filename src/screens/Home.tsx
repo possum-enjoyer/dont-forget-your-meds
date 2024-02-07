@@ -6,7 +6,7 @@ import { NativeScrollEvent, NativeSyntheticEvent, StyleSheet, FlatList, View } f
 import { useMD3Theme, useMedStore } from '../providers';
 import { RootStackScreenProps } from '../navigation';
 import { Calendar } from 'react-native-paper-dates';
-import Animated, { useSharedValue, withSpring, } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming, } from 'react-native-reanimated';
 import { Medication } from '../interfaces';
 import { buildSyncedStore } from '../hooks/SyncedStoreBuilder';
 import { DateTime } from 'luxon';
@@ -22,11 +22,16 @@ const DateStoreProvider = DateStore.StoreProvider;
 
 
 const getAllMonthDatesByDate = (date: Date): DateTime[] => {
-    const parsedDate = DateTime.fromJSDate(date)
+    const parsedDate = DateTime.fromJSDate(date);
 
     return Array.from(Array(parsedDate.daysInMonth), (_, x: number) => {
         return DateTime.local(parsedDate.year, parsedDate.month, x + 1);
     });
+};
+
+const calculateStartofWeek = (date: Date): number => {
+    const parsed = DateTime.fromJSDate(date);
+    return parsed.startOf('week').day;
 };
 
 const ChipSelectedWeek = () => {
@@ -34,7 +39,7 @@ const ChipSelectedWeek = () => {
     const [date, setDate] = useDateStore(s => s.date);
 
     React.useEffect(() => {
-        flatRef.current?.scrollToIndex({ index: date.getDate() - 1 });
+        flatRef.current?.scrollToIndex({ index: calculateStartofWeek(date) - 1 });
     }, [date])
 
     const week = React.useMemo(() => getAllMonthDatesByDate(date), [date]);
@@ -59,19 +64,18 @@ const OwnCalendar = () => {
 const CalendarComponent = () => {
     const theme = useMD3Theme();
     const flex = useSharedValue(0);
-    const display1 = useSharedValue<'flex' | 'none'>('flex');
-    const display2 = useSharedValue<'flex' | 'none'>('none');
+    const rotationX = useSharedValue<string>('0deg');
+    const rotationStyle = useAnimatedStyle(() => ({
+        transform: [{ rotateX: withTiming(rotationX.value, { duration: 100 }) }],
+    }));
 
     const bgColor = theme.colors.surfaceContainer;
 
     const clickOpenButton = React.useCallback(() => {
         const isExpand = flex.value > 0;
         flex.value = withSpring(isExpand ? 0 : 1.5);
-        display1.value = isExpand ? 'flex' : 'none';
-        display2.value = isExpand ? 'none' : 'flex';
-    }, [flex, display1, display2]);
-
-
+        rotationX.value = isExpand ? '0deg' : '180deg';
+    }, [flex, rotationX]);
 
     return (
         <Animated.View style={{ flex, display: 'flex', backgroundColor: bgColor, margin: 8 }}>
@@ -82,12 +86,8 @@ const CalendarComponent = () => {
                 <OwnCalendar />
             </PaperProvider>
             <View style={{ alignItems: 'center' }}>
-                <Animated.View style={{ display: display1 }}>
+                <Animated.View style={[rotationStyle]}>
                     <IconButton icon={'chevron-down'} onPress={() => clickOpenButton()} />
-                </Animated.View>
-                <Animated.View style={{ display: display2 }}>
-
-                    <IconButton icon={'chevron-up'} onPress={() => clickOpenButton()} />
                 </Animated.View>
             </View>
 
