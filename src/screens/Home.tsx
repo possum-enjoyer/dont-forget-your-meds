@@ -6,7 +6,7 @@ import { NativeScrollEvent, NativeSyntheticEvent, StyleSheet, FlatList, View } f
 import { useMD3Theme, useMedStore } from '../providers';
 import { RootStackScreenProps } from '../navigation';
 import { Calendar } from 'react-native-paper-dates';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming, } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated';
 import { Medication } from '../interfaces';
 import { buildSyncedStore } from '../hooks/SyncedStoreBuilder';
 import { DateTime } from 'luxon';
@@ -52,7 +52,7 @@ const ChipSelectedWeek = () => {
 
 };
 
-const OwnCalendar = () => {
+const CalendarWithDateStore = () => {
 
     const [date, setDate] = useDateStore(s => s.date);
 
@@ -73,7 +73,7 @@ const CalendarComponent = () => {
 
     const clickOpenButton = React.useCallback(() => {
         const isExpand = flex.value > 0;
-        flex.value = withSpring(isExpand ? 0 : 1.5);
+        flex.value = isExpand ? 0 : 1.5;
         rotationX.value = isExpand ? '0deg' : '180deg';
     }, [flex, rotationX]);
 
@@ -83,7 +83,7 @@ const CalendarComponent = () => {
                 <ChipSelectedWeek />
             </Animated.View>
             <PaperProvider theme={{ ...theme, colors: { ...theme.colors, surface: bgColor } }}>
-                <OwnCalendar />
+                <CalendarWithDateStore />
             </PaperProvider>
             <View style={{ alignItems: 'center' }}>
                 <Animated.View style={[rotationStyle]}>
@@ -144,7 +144,7 @@ const MedicationCard = ({ medicationId }: { medicationId: string }) => {
 
     const [isMenuVisible, setMenu] = React.useState<boolean>(false);
     if (medication.repeat === 'weekly' && medication.weekDay !== date.getDate()) {
-        return <></>
+        return <></>;
     }
     return (
         <Card key={medication.id} style={{ margin: 32 }}>

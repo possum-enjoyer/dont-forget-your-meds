@@ -135,10 +135,11 @@ export const MedicationForm = ({ route: { params }, navigation }: RootStackScree
                         <View style={{ margin: 32 }}>
                             <Controller control={form.control} name='takenWithMeal' rules={{ required: true }}
                                 render={({ field: { onChange, value } }) => {
+                                    const choices = [{ ans: 'Yes', v: true }, { ans: 'No', v: false }];
                                     return (
-                                        <Dropdown mode='outlined' defaultValue={'Yes'} onChange={onChange}>
+                                        <Dropdown mode="outlined" value={choices.find(p => p.v === value)?.ans ?? "Yes"} onChange={onChange}>
                                             {
-                                                [{ ans: 'Yes', v: true }, { ans: 'No', v: false }].map(answer => <Dropdown.Item key={answer.ans} title={answer.ans} value={answer.v} />)
+                                                choices.map(answer => <Dropdown.Item key={answer.ans} title={answer.ans} value={answer.v} />)
                                             }
 
                                         </Dropdown>
