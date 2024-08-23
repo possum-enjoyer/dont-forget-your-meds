@@ -1,1 +1,1 @@
-# take-your-fcking-meds
+# take-your-meds
